@@ -21,3 +21,9 @@
   for = "*.apk"
   [headers.values]
     Content-Type = "application/vnd.android.package-archive"
+
+# Manifiesto PWA con su MIME correcto (necesario para "añadir a pantalla de inicio")
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
