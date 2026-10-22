@@ -1,5 +1,10 @@
-/* KIDFLOW · Service Worker (cache offline para APK/PWA) */
-const CACHE = 'kidflow-v1';
+/* KIDFLOW · Service Worker
+   - Los documentos (index.html) usan "network-first": siempre se intenta la
+     versión más reciente, y solo se usa la caché si no hay conexión.
+     Así las actualizaciones de la tienda llegan siempre al visitante.
+   - Los estáticos (iconos, manifiesto) usan "stale-while-revalidate":
+     se responde desde caché (rápido) y se refresca en segundo plano. */
+const CACHE = 'kidflow-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -22,11 +27,36 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
-      return res;
-    }).catch(() => caches.match('./index.html')))
-  );
+  let url;
+  try { url = new URL(e.request.url); } catch (err) { return; }
+  if (url.origin !== self.location.origin) return;
+
+  const isDoc = e.request.mode === 'navigate'
+             || url.pathname.endsWith('/')
+             || url.pathname.endsWith('index.html');
+
+  if (isDoc) {
+    /* network-first para el documento */
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match(e.request).then(c => c || caches.match('./index.html')))
+    );
+  } else {
+    /* stale-while-revalidate para estáticos */
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        const net = fetch(e.request).then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+          return res;
+        }).catch(() => cached);
+        return cached || net;
+      })
+    );
+  }
 });
