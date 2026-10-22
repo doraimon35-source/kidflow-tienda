@@ -4,7 +4,7 @@
      Así las actualizaciones de la tienda llegan siempre al visitante.
    - Los estáticos (iconos, manifiesto) usan "stale-while-revalidate":
      se responde desde caché (rápido) y se refresca en segundo plano. */
-const CACHE = 'kidflow-v2';
+const CACHE = 'kidflow-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -36,9 +36,9 @@ self.addEventListener('fetch', e => {
              || url.pathname.endsWith('index.html');
 
   if (isDoc) {
-    /* network-first para el documento */
+    /* network-first para el documento (sin caché HTTP: siempre la versión más reciente) */
     e.respondWith(
-      fetch(e.request)
+      fetch(e.request, { cache: 'no-store' })
         .then(res => {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
