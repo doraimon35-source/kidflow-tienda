@@ -300,7 +300,7 @@ a{color:inherit}
   padding:11px 14px;border-radius:13px;text-decoration:none;white-space:nowrap;
 }
 .apkbar-x{flex:none;border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:4px 6px}
-body.apkbar-on{padding-bottom:calc(74px + 64px + var(--sab));--toast-bottom:146px}
+body.apkbar-on{padding-bottom:calc(74px + 64px + var(--sab))}
 
 /* ============ Modal producto ============ */
 .overlay{
@@ -382,7 +382,7 @@ body.apkbar-on{padding-bottom:calc(74px + 64px + var(--sab));--toast-bottom:146p
 
 /* ============ Toast ============ */
 #toast{
-  position:fixed;left:50%;bottom:calc(var(--toast-bottom,88px) + var(--sab));transform:translate(-50%,26px);
+  position:fixed;left:50%;bottom:calc(88px + var(--sab));transform:translate(-50%,26px);
   z-index:150;background:var(--accent);color:#000;padding:12px 20px;border-radius:14px;
   font-size:13.5px;font-weight:800;box-shadow:0 14px 40px rgba(0,0,0,.5);
   opacity:0;visibility:hidden;transition:.3s;max-width:90vw;text-align:center;
@@ -991,10 +991,15 @@ if('serviceWorker' in navigator){
   try{ dismissed = localStorage.getItem('kidflow_apkbar') === 'off'; }catch(e){}
   if(standalone || dismissed){ bar.remove(); return; }
   /* Aparece tras un breve momento, sin tapar nada (el body reserva su hueco) */
-  window.setTimeout(()=>{ bar.classList.add('on'); document.body.classList.add('apkbar-on'); }, 3200);
+  const toast = document.getElementById('toast');
+  window.setTimeout(()=>{
+    bar.classList.add('on'); document.body.classList.add('apkbar-on');
+    if(toast) toast.style.bottom = '146px'; /* el toast no debe pisar la barra */
+  }, 3200);
   /* Cerrar y no volver a mostrar */
   document.getElementById('apkbar-x').addEventListener('click', ()=>{
     bar.classList.remove('on'); document.body.classList.remove('apkbar-on');
+    if(toast) toast.style.bottom = '';
     try{ localStorage.setItem('kidflow_apkbar','off'); }catch(e){}
     window.setTimeout(()=>bar.remove(), 450);
   });
