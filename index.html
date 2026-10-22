@@ -281,6 +281,28 @@ a{color:inherit}
 .bnav a svg{width:21px;height:21px}
 .bnav a.on{color:var(--accent)}
 
+/* ============ Barra descarga APK ============ */
+.apkbar{
+  position:fixed;left:0;right:0;bottom:calc(74px + var(--sab));z-index:95;
+  display:flex;align-items:center;gap:10px;padding:10px 8px 10px 13px;
+  background:linear-gradient(135deg,#17171f,#101016);
+  border-top:1px solid var(--line);box-shadow:0 -12px 32px rgba(0,0,0,.55);
+  transform:translateY(150%);opacity:0;pointer-events:none;
+  transition:transform .45s cubic-bezier(.2,.9,.25,1),opacity .35s;
+}
+.apkbar.on{transform:translateY(0);opacity:1;pointer-events:auto}
+.apkbar-ic{font-size:25px;line-height:1;flex:none}
+.apkbar-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.32}
+.apkbar-txt b{font-size:13px;font-weight:800;color:var(--text)}
+.apkbar-txt span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.apkbar-btn{
+  flex:none;background:var(--accent);color:#000;font-weight:900;font-size:12px;
+  padding:11px 14px;border-radius:13px;text-decoration:none;white-space:nowrap;
+}
+.apkbar-x{flex:none;border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:4px 6px}
+body.apkbar-on{padding-bottom:calc(74px + 64px + var(--sab))}
+body.apkbar-on #toast{bottom:calc(146px + var(--sab))}
+
 /* ============ Modal producto ============ */
 .overlay{
   position:fixed;inset:0;z-index:120;background:rgba(4,4,6,.72);backdrop-filter:blur(6px);
@@ -551,6 +573,17 @@ a{color:inherit}
     Contacto
   </a>
 </nav>
+
+<!-- ============ BARRA DESCARGA APK ============ -->
+<div id="apkbar" class="apkbar" role="complementary" aria-label="Descargar la app">
+  <div class="apkbar-ic">📱</div>
+  <div class="apkbar-txt">
+    <b>Llévate KIDFLOW en tu móvil</b>
+    <span>Descarga la app y compra en segundos</span>
+  </div>
+  <a class="apkbar-btn" href="KIDFLOW.apk" download="KIDFLOW.apk">Descargar APK</a>
+  <button id="apkbar-x" class="apkbar-x" aria-label="Cerrar aviso">&times;</button>
+</div>
 
 <!-- ============ MODAL PRODUCTO ============ -->
 <div class="overlay" id="ovProduct">
@@ -948,6 +981,25 @@ window.addEventListener('load', () => {
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
 }
+
+/* ---- Barra de descarga APK (solo en la web, no dentro de la app) ---- */
+(function(){
+  const bar = document.getElementById('apkbar');
+  if(!bar) return;
+  /* No mostrar si ya tiene la app instalada (APK o PWA a pantalla completa) */
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  let dismissed = false;
+  try{ dismissed = localStorage.getItem('kidflow_apkbar') === 'off'; }catch(e){}
+  if(standalone || dismissed){ bar.remove(); return; }
+  /* Aparece tras un breve momento, sin tapar nada (el body reserva su hueco) */
+  window.setTimeout(()=>{ bar.classList.add('on'); document.body.classList.add('apkbar-on'); }, 3200);
+  /* Cerrar y no volver a mostrar */
+  document.getElementById('apkbar-x').addEventListener('click', ()=>{
+    bar.classList.remove('on'); document.body.classList.remove('apkbar-on');
+    try{ localStorage.setItem('kidflow_apkbar','off'); }catch(e){}
+    window.setTimeout(()=>bar.remove(), 450);
+  });
+})();
 </script>
 </body>
 </html>
